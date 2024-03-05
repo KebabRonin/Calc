@@ -24,7 +24,7 @@ while 1 * (1 + u) != 1:
 u*=10
 m += 1
 print(f"Ex1: {u=}, {m=}")
-x, y, z = 1.0, 1 + u/10, 1 + u/10
+x, y, z = 0.5, 1 + u, 1 + u
 print(f"Ex2: {((x * y) * z != x * (y * z))=}")
 
 def T(t, a):
@@ -47,6 +47,10 @@ def T(t, a):
 			return (2027025 * a - 270270 * a ** 3 + 6930 * a ** 5 - 36 * a ** 7) / (2027025 - 945945 * a ** 2 + 51975 * a ** 4 - 630 * a ** 6 + a ** 8)
 		case 9:
 			return (34459425 * a - 4729725 * a ** 3 + 135135 * a ** 5 - 990 * a ** 7 + a ** 9) / (34459425 - 16216200 * a ** 2 + 945945 * a ** 4 - 13860 * a ** 6 + 45 * a ** 8)
+def S(n, a):
+	return T(n, a) / math.sqrt(1 + (T(n, a) ** 2))
+def C(n, a):
+	return 1 / math.sqrt(1 + (T(n, a) ** 2))
 
 def test_10_000(f, fverif):
 	nrs = [random.uniform(-math.pi/2, math.pi/2) for _ in range(10_000)]
@@ -68,18 +72,13 @@ def test_10_000(f, fverif):
 
 	return l[0][1] # returneaza cea mai buna valoare pentru n
 
-
 best_tan = test_10_000(T, math.tan)
-
-def S(n, a):
-	return T(n, a) / math.sqrt(1 + (T(n, a) ** 2))
-def C(n, a):
-	return 1 / math.sqrt(1 + (T(n, a) ** 2))
-
 best_sin = test_10_000(S, math.sin)
 best_cos = test_10_000(C, math.cos)
 print(f"{best_tan=}\n{best_sin=}\n{best_cos=}\n=====")
+
 nr = random.uniform(-math.pi/2, math.pi/2)
+
 print(f"{nr=}")
 print(f"T({best_tan}, nr) = {T(best_tan, nr):<12} | {math.tan(nr)=} (err={abs(math.tan(nr) - T(best_tan, nr))})")
 print(f"S({best_sin}, nr) = {S(best_sin, nr):<12} | {math.sin(nr)=} (err={abs(math.sin(nr) - S(best_sin, nr))})")
