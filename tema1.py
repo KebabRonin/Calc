@@ -10,22 +10,19 @@ u*=10
 m += 1
 
 
-print(f"Ex1: {u=}, {m=}")
+print(f"Ex1:\n{u=}, {m=}")
 
 x, y, z = 1.0, u/10, u/10
-print(f"Ex2: {((x + y) + z != x + (y + z))=}")
+print(f"\nEx2:")
+print(f"{x, y, z=}")
+print(f"{((x + y) + z != x + (y + z))=}")
 ### !!! Nu merge inmultirea
 m = -1
 u = 0.1
 
-while 1 * (1 + u) != 1:
-	m -= 1
-	u *= 0.1
-u*=10
-m += 1
-print(f"Ex1: {u=}, {m=}")
-x, y, z = 0.5, 1 + u, 1 + u
-print(f"Ex2: {((x * y) * z != x * (y * z))=}")
+x, y, z = 1.4587634893721988298, 9.43983289434897328449821, 2349.39454795868969865895679856656565
+print(f"{x, y, z=}")
+print(f"{((x * y) * z != x * (y * z))=}")
 
 def T(t, a):
 	match t:
@@ -71,6 +68,8 @@ def test_10_000(f, fverif):
 	print("=====")
 
 	return l[0][1] # returneaza cea mai buna valoare pentru n
+
+print("\nEx3:")
 
 best_tan = test_10_000(T, math.tan)
 best_sin = test_10_000(S, math.sin)
