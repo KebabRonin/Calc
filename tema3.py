@@ -11,7 +11,7 @@ import numpy, math, sys, os, copy
 
 
 # Init: precizia si fisierul date ca argumente la linia de comanda
-PRECISION = 10
+PRECISION = 6
 IN_FILE = "t3.in"
 norma = lambda x: numpy.linalg.norm(x, ord=2)
 
@@ -49,30 +49,6 @@ def rand_data(n):
 def is_zero(x: float) -> bool:
 	return math.fabs(x) < EPS
 
-def sols(A_init, s):
-	n = s.shape[0]
-	print(f"\n----> Ex3: Solutii:")
-	# x = solve(A_init, s)
-	# x_bon = solve_bonus(A_init, s)
-	x_lib = numpy.linalg.solve(A_init, s)
-	A_inv_lib = numpy.linalg.inv(A_init)
-	# err1 = norma(A_init * x.reshape((n, 1)) - s)
-	err11 = norma(A_init * x_lib.reshape((n, 1)) - s)
-	# err2 = norma(x - x_lib)
-	# err3 = norma(x - A_inv_lib * s.reshape((n, 1)))
-	# print(f"Solutie calc : {x} ca numpy?: {is_zero(norma(x - x_lib))}")
-	# print(f"Solutie bonus: {x_bon} ca numpy?: {is_zero(norma(x_bon - x_lib))}")
-	print(f"Solutie numpy: {x_lib}")
-	print(f"")
-	# print(f"{'norma(A_init * x - s)':<35}: {err1:<25}; {(err1  < 1e-8)=}")
-	print(f"{'norma(A_init * x_lib - s)':<35}: {err11:<25}; {(err11 < 1e-8)=}")
-	# print(f"{'norma(x - x_lib)':<35}: {err2:<25};")
-	# print(f"{'norma(x - A_inv_lib * s)':<35}: {err3:<25};")
-	print(f"Inversa A^-1 numpy:\n{A_inv_lib}")
-
-def afisare(A_init, s):
-	sols(A_init, s)
-
 def calc_b(A_init, s):
 	b = numpy.zeros_like(s)
 	for i in range(s.shape[0]):
@@ -81,34 +57,84 @@ def calc_b(A_init, s):
 
 def QR_decomp(A_init, b_init):
 	b = copy.deepcopy(b_init)
-	Q = numpy.identity(A_init.shape[0])
+	Qt = numpy.identity(A_init.shape[0])
 	R = copy.deepcopy(A_init)
 	n = A_init.shape[0]
-	for r in range(n - 1):
-		sigma = sum([A_init[j, r] ** 2 for j in range(r, n)])
+	for r in range(n-1):
+		sigma = sum([R[i, r] ** 2 for i in range(r, n)])
 		if is_zero(sigma):
 			print("Matricea A e singulara")
 			break
-		k = math.sqrt(sigma) * (1 if A_init[r, r] >= 0 else -1)
-		beta = sigma + k * A_init[r, r]
+		k = math.sqrt(sigma) * (-1 if R[r, r] > 0 else 1)
+		beta = sigma - k * R[r, r]
+
 		u = numpy.zeros((n,))
-		u[r] = A_init[r, r] - k
+		u[r] = R[r, r] - k
 		for i in range(r+1, n):
-			u[i] = A_init[i, r]
-		f = 1 / beta
-		# build Pr
-		P = numpy.zeros_like(A_init)
-		for i in range(r):
-			P[i, i] = 1
+			u[i] = R[i, r]
+
+		# R = P * R
+		for j in range(r+1, n):
+			gamma = sum([u[i] * R[i, j] for i in range(r, n)]) / beta
+			for i in range(r, n):
+				R[i, j] -= gamma * u[i]
+		R[r, r] = k
+		for i in range(r+1, n):
+			R[i, r] = 0
+
+		# b = P * b
+		gamma = sum([u[i] * b[i] for i in range(r, n)]) / beta
 		for i in range(r, n):
-			for j in range(r, n):
-				A_init[i, j] = -f * u[i] * u[j]
-			A_init[i, i] += 1
-		R = P * R
-		b = P * b.reshape(3, 1)
-		Q = P * Q
+			b[i] -= gamma * u[i]
+
+		# Q = P * Q
+		for j in range(n):
+			gamma = sum([u[i] * Qt[i, j] for i in range(r, n)]) / beta
+			for i in range(r, n):
+				Qt[i, j] -= gamma * u[i]
+
+	Q = numpy.transpose(Qt)
 	return Q, R
 
+
+def solve(A_init, b, Q, R):
+	# Ceva de genul asta, nu e gata
+	# a = LU_decomp(A_init)
+	n = b.shape[0]
+	#Ax = b -> 1. Ly = b; 2. Ux = y;
+	#Ly = b
+	y = numpy.zeros_like(b)
+	for i in range(n):
+		y[i] = (b[i] - sum([a[i, j] * y[j] for j in range(i)])) / a[i, i]
+
+	#Ux = y
+	x = numpy.zeros_like(b)
+	for i in reversed(range(n)):
+		x[i] = y[i] - sum([a[i, j] * x[j] for j in range(i+1, n)])
+
+	return x
+
+def sols(A_init, s):
+	b_init = calc_b(A_init, s)
+	n = s.shape[0]
+	print(f"\n----> Ex3: Solutii:")
+	xQR = numpy.linalg.qr(A_init)
+	xHouseholder = QR_decomp(A_init, b_init)
+	print("Lib:")
+	print(xQR[0])
+	print(xQR[1])
+	print("Tema:")
+	print(xHouseholder[0])
+	print(xHouseholder[1])
+	# err = norma(xQR - xHouseholder)
+	# print(f"norma(xQR - xHouseholder): {err}")
+
+def afisare(A_init, s):
+	sols(A_init, s)
+
 A_init, s = read_data(IN_FILE)
-print(QR_decomp(A_init, calc_b(A_init, s)))
-# afisare(A_init, s)
+Q, R = QR_decomp(A_init, calc_b(A_init, s))
+print(calc_b(A_init, s))
+print(Q)
+print(R)
+afisare(A_init, s)
