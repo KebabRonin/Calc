@@ -79,12 +79,16 @@ def calc_b(A_init, s):
 		b[i] = sum([s[j] * A_init[i, j] for j in range(s.shape[0])])
 	return b
 
-def QR_decomp(A_init, b):
+def QR_decomp(A_init, b_init):
+	b = copy.deepcopy(b_init)
 	Q = numpy.identity(A_init.shape[0])
 	R = copy.deepcopy(A_init)
 	n = A_init.shape[0]
 	for r in range(n - 1):
 		sigma = sum([A_init[j, r] ** 2 for j in range(r, n)])
+		if is_zero(sigma):
+			print("Matricea A e singulara")
+			break
 		k = math.sqrt(sigma) * (1 if A_init[r, r] >= 0 else -1)
 		beta = sigma + k * A_init[r, r]
 		u = numpy.zeros((n,))
