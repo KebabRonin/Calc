@@ -41,8 +41,7 @@ def read_data(file_name: str):
 	A_init = numpy.matrix([[x for x in data[i*n:i*n+n]] for i in range(n)])
 	return A_init, b
 
-def rand_data():
-	n = 10
+def rand_data(n):
 	A_init = numpy.random.rand(n, n)
 	b = numpy.random.rand(n)
 	return A_init, b
@@ -113,7 +112,7 @@ def LU_decomp_bonus(A_init):
 		for i in range(1, n-p):
 			# print("U", [(p, i, k, L[d1(k,n) + p - k], U[d1(k,n) + i + p - k]) for k in range(p)])
 			U[id_u + i] = (A_init[p, p+i] - sum([L[d1(k,n) + p - k] * U[d1(k,n) + i + p - k] for k in range(p)])) / L[id_l]
-	# print(L, '\n', U)
+	print(L, '\n', U)
 	return (L, U)
 
 def solve_bonus(A_init, b):
@@ -181,4 +180,6 @@ def afisare(A_init, b):
 
 
 A_init, b = read_data(IN_FILE)
+
+LU_decomp_bonus(A_init)
 afisare(A_init, b)

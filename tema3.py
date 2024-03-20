@@ -55,8 +55,11 @@ def calc_b(A_init, s):
 		b[i] = sum([s[j] * A_init[i, j] for j in range(s.shape[0])])
 	return b
 
-def QR_decomp(A_init, b_init):
-	b = copy.deepcopy(b_init)
+def QR_decomp(A_init, b_init=None):
+	if b_init is not None:
+		b = copy.deepcopy(b_init)
+	else:
+		b = None
 	Qt = numpy.identity(A_init.shape[0])
 	R = copy.deepcopy(A_init)
 	n = A_init.shape[0]
@@ -83,9 +86,10 @@ def QR_decomp(A_init, b_init):
 			R[i, r] = 0
 
 		# b = P * b
-		gamma = sum([u[i] * b[i] for i in range(r, n)]) / beta
-		for i in range(r, n):
-			b[i] -= gamma * u[i]
+		if b is not None:
+			gamma = sum([u[i] * b[i] for i in range(r, n)]) / beta
+			for i in range(r, n):
+				b[i] -= gamma * u[i]
 
 		# Q = P * Q
 		for j in range(n):
@@ -96,45 +100,95 @@ def QR_decomp(A_init, b_init):
 	Q = numpy.transpose(Qt)
 	return Q, R
 
-
-def solve(A_init, b, Q, R):
-	# Ceva de genul asta, nu e gata
-	# a = LU_decomp(A_init)
-	n = b.shape[0]
-	#Ax = b -> 1. Ly = b; 2. Ux = y;
-	#Ly = b
-	y = numpy.zeros_like(b)
-	for i in range(n):
-		y[i] = (b[i] - sum([a[i, j] * y[j] for j in range(i)])) / a[i, i]
-
-	#Ux = y
+def subinv(A,b):
+	n = A.shape[0]
 	x = numpy.zeros_like(b)
 	for i in reversed(range(n)):
-		x[i] = y[i] - sum([a[i, j] * x[j] for j in range(i+1, n)])
-
+		x[i] = (b[i] - sum([A[i, j] * x[j] for j in range(i+1, n)])) / A[i, i]
 	return x
 
-def sols(A_init, s):
-	b_init = calc_b(A_init, s)
-	n = s.shape[0]
-	print(f"\n----> Ex3: Solutii:")
-	xQR = numpy.linalg.qr(A_init)
-	xHouseholder = QR_decomp(A_init, b_init)
-	print("Lib:")
-	print(xQR[0])
-	print(xQR[1])
-	print("Tema:")
-	print(xHouseholder[0])
-	print(xHouseholder[1])
-	# err = norma(xQR - xHouseholder)
-	# print(f"norma(xQR - xHouseholder): {err}")
+def solve(A_init, b_init, Q, R):
+	Qt = numpy.transpose(Q)
+	n = A_init.shape[0]
+	bQ = (Qt @ numpy.atleast_2d(b_init).T)
+	for i in range(n):
+		if is_zero(R[i, i]):
+			print("R nu are det 0, ecuatia nu are solutie")
+			return None
+	x = subinv(R, bQ)
+	return x
+
+def QRinv(A_init):
+	Q, R = QR_decomp(A_init)
+	n = A_init.shape[0]
+	for i in range(n):
+		if is_zero(R[i, i]):
+			print("R nu are det 0, inversa nu se poate calcula")
+			return None
+	A_inv = numpy.zeros_like(A_init)
+	for j in range(n):
+		b = numpy.array([Q[j, i] for i in range(n)])
+		x_prim = subinv(R, b)
+		for i in range(n):
+			A_inv[i, j] = x_prim[i]
+	return A_inv
+
+
+def bonus(A_init):
+	n = A_init.shape[0]
+	for i in range(n):
+		for j in range(i+1, n):
+			if A_init[i, j] != A_init[j, i]:
+				print("[BONUS] Matricea nu e simetrica", i, j)
+				return
+	mat_c = copy.deepcopy(A_init)
+	mat_next = numpy.zeros_like(A_init)
+	last_err = 10
+	while not is_zero(last_err):#norma(mat_next - mat_c)
+		Q, R = QR_decomp(mat_c)
+		mat_next = R @ Q
+		if norma(mat_next - mat_c) == last_err:
+			print("Stuck in a loop")
+			return None
+		else:
+			last_err = norma(mat_next - mat_c)
+		print(last_err, norma(mat_next - mat_c))
+		print(mat_c, "\n\n", mat_next, "\n\n")
+		mat_c = mat_next
+	return mat_next
 
 def afisare(A_init, s):
-	sols(A_init, s)
+	b_init = calc_b(A_init, s)
+	n = s.shape[0]
+	libs = numpy.linalg.qr(A_init)
+	xQR = solve(A_init, b_init, libs.Q, libs.R)
+	tems = QR_decomp(A_init, b_init)
+	xHouseholder = solve(A_init, b_init, tems[0], tems[1])
+	print("Lib:")
+	print("Q=\n", libs.Q)
+	print("R=\n", libs.R)
+	print("xQR=\n", xQR)
+	print("Tema:")
+	print("Q=\n", tems[0])
+	print("R=\n", tems[1])
+	print('xHouseholder=\n', xHouseholder)
+	err = norma(xQR - xHouseholder)
+	print(f"norma(xQR - xHouseholder): {err}")
+
+	print("----> Ex4: Erori")
+	err1 = norma(A_init @ xHouseholder - numpy.atleast_2d(b_init).T)
+	err2 = norma(A_init @ xQR - numpy.atleast_2d(b_init).T)
+	err11 = norma(xHouseholder - numpy.atleast_2d(s).T) / norma(s)
+	err21 = norma(xQR - numpy.atleast_2d(s).T) / norma(s)
+	print("norma(A * xH  - b):         ", err1)
+	print("norma(A * xQR - b):         ", err2)
+	print("norma(A * xH  - s)/norma(s):", err11)
+	print("norma(A * xQR - s)/norma(s):", err21)
+	print("inv:\n", QRinv(A_init))
+	print("norma(invH - invNumpy):     ", norma(QRinv(A_init) - numpy.linalg.inv(A_init)))
 
 A_init, s = read_data(IN_FILE)
-Q, R = QR_decomp(A_init, calc_b(A_init, s))
-print(calc_b(A_init, s))
-print(Q)
-print(R)
+# A_init, s = rand_data(5)
 afisare(A_init, s)
+# bonus_ex = numpy.matrix([[1, 6, 2], [6, 3, 4], [2, 4, 10]])
+# print(bonus(bonus_ex))

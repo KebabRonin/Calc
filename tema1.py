@@ -16,7 +16,7 @@ x, y, z = 1.0, u/10, u/10
 print(f"\nEx2:")
 print(f"{x, y, z=}")
 print(f"{((x + y) + z != x + (y + z))=}")
-### !!! Nu merge inmultirea
+
 m = -1
 u = 0.1
 
