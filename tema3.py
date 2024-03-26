@@ -142,11 +142,12 @@ def bonus(A_init):
 				print("[BONUS] Matricea nu e simetrica", i, j)
 				return
 	mat_c = copy.deepcopy(A_init)
-	mat_next = numpy.zeros_like(A_init)
+	# mat_next = numpy.zeros_like(A_init)
 	last_err = 10
 	while not is_zero(last_err):#norma(mat_next - mat_c)
 		Q, R = QR_decomp(mat_c)
-		mat_next = R @ Q
+		# inmultire
+		mat_next = numpy.zeros_like(mat_c)
 		if norma(mat_next - mat_c) == last_err:
 			print("Stuck in a loop")
 			return None
@@ -187,8 +188,8 @@ def afisare(A_init, s):
 	print("inv:\n", QRinv(A_init))
 	print("norma(invH - invNumpy):     ", norma(QRinv(A_init) - numpy.linalg.inv(A_init)))
 
-A_init, s = read_data(IN_FILE)
-# A_init, s = rand_data(5)
+# A_init, s = read_data(IN_FILE)
+A_init, s = rand_data(6)
 afisare(A_init, s)
 # bonus_ex = numpy.matrix([[1, 6, 2], [6, 3, 4], [2, 4, 10]])
 # print(bonus(bonus_ex))
