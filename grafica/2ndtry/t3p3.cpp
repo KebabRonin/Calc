@@ -49,6 +49,7 @@ public:
     return ((m.x == p.m.x) && (m.y == p.m.y));
   }
 
+
 protected:
   struct SDate
   {
@@ -76,6 +77,13 @@ public:
   {
     x = m.x;
     y = m.y;
+  }
+
+  void setX(double x) {
+      m.x = x;
+  }
+  void setY(double y) {
+      m.y = y;
   }
 
   int operator==(CPunct &p)
@@ -299,6 +307,7 @@ public:
       CPunct p,
       CVector v)
   {
+      v.rotatie(90);
       assert(factordiviziune != 0);
       CPunct p1, p2;
       if (nivel == 0)
@@ -306,37 +315,38 @@ public:
       }
       else
       {
-          v.rotatie(-45);
+          
+          v.rotatie(-135);
           v.deseneaza(p, lungime);
           p1 = v.getDest(p, lungime);
-          arborePerron(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
+          arborePerron2(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
 
-          v.rotatie(-90);
-          v.deseneaza(p, lungime);
-          p1 = v.getDest(p, lungime);
-          p2 = p1;
-
-          v.rotatie(-30);
-          v.deseneaza(p1, lungime);
-          p1 = v.getDest(p1, lungime);
-          arborePerron(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
-
-          p1 = p2;
           v.rotatie(90);
+          v.deseneaza(p, lungime);
+          p1 = v.getDest(p, lungime);
+          p2 = p1;
+
+          v.rotatie(10);
+          v.deseneaza(p1, lungime);
+          p1 = v.getDest(p1, lungime);
+          arborePerron2(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
+
+          p1 = p2;
+          v.rotatie(-55);
           v.deseneaza(p1, lungime);
           p1 = v.getDest(p1, lungime);
           p2 = p1;
 
-          v.rotatie(30);
+          v.rotatie(20);
           v.deseneaza(p1, lungime);
           p1 = v.getDest(p1, lungime);
-          arborePerron(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
+          arborePerron2(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
 
           p1 = p2;
-          v.rotatie(-90);
+          v.rotatie(-110);
           v.deseneaza(p1, lungime);
           p1 = v.getDest(p1, lungime);
-          arborePerron(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
+          arborePerron2(lungime * factordiviziune, nivel - 1, factordiviziune, p1, v);
       }
   }
 
@@ -349,6 +359,7 @@ public:
     CPunct p(0.0, -1.0);
     CPunct pminus(0.0, 1.0);
     CPunct used;
+
     //maybe not such a good approach
     if (global_x < 100) {
         used = p;
@@ -358,37 +369,15 @@ public:
     }
         
     else if (global_x > 200) {
-        
+        v.rotatie(180);
         used = pminus;
         v.deseneaza(used, 0.25);
         used = v.getDest(used, 0.25);
-        arborePerron2(lungime, nivel, 0.4, used, v);
+        arborePerron2(lungime, nivel, 0.3, used, v);
     }
     //~maybe not such a good approach
   }
 
-
-  void afisare2(double lungime, int nivel)
-  {
-      CVector v(0.0, 1.0);
-      CPunct p(0.0, -1.0);
-      CPunct pminus(0.0, 1.0);
-      CPunct used;
-      int angle = 0;
-      if (global_x < 100) {
-          used = p;
-      }
-
-      if (global_x > 200) {
-          v.rotatie(180);
-          used = pminus;
-      }
-
-
-      v.deseneaza(used, 0.25);
-      used = v.getDest(used, 0.25);
-      arborePerron2(lungime, nivel, 0.4, used, v);
-  }
 
 };
 
@@ -397,33 +386,33 @@ public:
 class CCurbaHilbert
 {
 public:
-  void curbaHilbert(double lungime, int nivel, CPunct &p, CVector &v, int d, int angle)
+  void curbaHilbert(double lungime, int nivel, CPunct &p, CVector &v, int d)
   {
     if (nivel == 0) 
     {
     }
     else
     {
-        v.rotatie((angle * 90)%360);//added by me
+      
       v.rotatie(d * 90);
-      curbaHilbert(lungime, nivel - 1, p, v, -d, angle);
+      curbaHilbert(lungime, nivel - 1, p, v, -d);
 
       v.deseneaza(p, lungime);
       p = v.getDest(p, lungime);
 
       v.rotatie(-d * 90);
-      curbaHilbert(lungime, nivel - 1, p, v, d, angle);
+      curbaHilbert(lungime, nivel - 1, p, v, d);
 
       v.deseneaza(p, lungime);
       p = v.getDest(p, lungime);
 
-      curbaHilbert(lungime, nivel - 1, p, v, d, angle);
+      curbaHilbert(lungime, nivel - 1, p, v, d);
 
       v.rotatie(-d * 90);
       v.deseneaza(p, lungime);
       p = v.getDest(p, lungime);
       
-      curbaHilbert(lungime, nivel - 1, p, v, -d, angle);
+      curbaHilbert(lungime, nivel - 1, p, v, -d);
 
       v.rotatie(d * 90);
     }
@@ -434,14 +423,90 @@ public:
     CVector v(0.0, 1.0);
     CPunct p(0.0, 0.0);
     printf("x=%d y=%d\n", global_x, global_y);
-    int angle = 1;
-    if (global_x < 100)
-        angle=(angle+1)%4;
-    if(global_x>200)
-        angle=(angle-1)%4;
-    curbaHilbert(lungime, nivel, p, v, 1, angle);
+
+    curbaHilbert(lungime, nivel, p, v, 1);
   }
 };
+
+class SQUARES
+{
+public:
+    void segmentSquare(double lungime, int nivel, CPunct& p, CVector v)
+    {
+        CPunct p1;
+        if (nivel == 0)
+        {
+            drawSquare(lungime, p, v);
+        }
+        else
+        {
+            double cx, cy;
+            p.getxy(cx, cy);
+            CPunct ajutator(cx, cy);
+            segmentSquare(lungime / 2.0, 1, ajutator, v);
+
+            //the three at the top
+            ajutator.setY(cy + lungime);
+            ajutator.setX(cx + lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            ajutator.setX(cx);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            ajutator.setX(cx - lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+
+            //the two in the middle
+            ajutator.setY(cy);
+            ajutator.setX(cx + lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            ajutator.setX(cx - lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+
+            //the three at the bottom
+            ajutator.setY(cy - lungime);
+            ajutator.setX(cx + lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            ajutator.setX(cx);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            ajutator.setX(cx - lungime);
+            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+            
+        }
+    }
+
+    void afisare(double lungime, int nivel)
+    {
+        CVector v1(0.5, 0.0);
+        CPunct p1(0,0);
+
+
+
+        segmentSquare(lungime, nivel, p1, v1);
+
+        segmentSquare(lungime * 2, 0, p1, v1);
+    }
+
+private:
+    void drawSquare(double lungime, CPunct& p, CVector v) {
+        double ics, yigrec;
+        p.getxy(ics, yigrec);
+        CPunct helper(ics - lungime / 2.0, yigrec - lungime / 2.0);
+
+        v.deseneaza(helper, lungime);
+        helper = v.getDest(helper, lungime);
+        v.rotatie(90);
+        v.deseneaza(helper, lungime);
+        helper = v.getDest(helper, lungime);
+        v.rotatie(90);
+        v.deseneaza(helper, lungime);
+        helper = v.getDest(helper, lungime);
+        v.rotatie(90);
+        v.deseneaza(helper, lungime);
+        helper = v.getDest(helper, lungime);
+        v.rotatie(90);
+    }
+};
+
+
 
 
 
@@ -590,7 +655,33 @@ void Display4() {
   nivel++;
 }
 
+void Display5() {
+    SQUARES cck;
+    cck.afisare(0.5, nivel);
 
+    char c[3];
+    sprintf(c, "%2d", nivel);
+    glRasterPos2d(-0.98, -0.98);
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'N');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'i');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'v');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'e');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'l');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, '=');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c[0]);
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c[1]);
+
+    glRasterPos2d(-1.0, 0.9);
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 's');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'q');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'u');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'a');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'r');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'e');
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 's');
+
+    nivel++;
+}
 
 void Init(void) {
 
@@ -628,6 +719,10 @@ void Display(void)
       glClear(GL_COLOR_BUFFER_BIT);
       Display4();
       break;
+    case '5':
+        glClear(GL_COLOR_BUFFER_BIT);
+        Display5();
+        break;
     default:
       break;
   }
