@@ -8,6 +8,20 @@
 
 #include "glut.h"
 
+
+
+
+// the maximum number of iterations for the Julia-Fatou set membership testing 
+#define NRITER_JF 5000
+// the maximum value of M for the Julia-Fatou set membership testing 
+#define MODMAX_JF 10000000
+// increments used in CJuliaFatou
+#define RX_JF 0.01
+#define RY_JF 0.01
+
+
+
+
 // the size of the window measured in pixels
 #define dim 300
 
@@ -16,6 +30,254 @@ int nivel = 0;
 
 int global_x, global_y; //so i know where the actual motherfockingflyingfuck my cursor is
 
+class CComplex {
+public:
+    CComplex() : re(0.0), im(0.0) {}
+    CComplex(double re1, double im1) : re(re1 * 1.0), im(im1 * 1.0) {}
+    CComplex(const CComplex& c) : re(c.re), im(c.im) {}
+    ~CComplex() {}
+
+    CComplex& operator=(const CComplex& c)
+    {
+        re = c.re;
+        im = c.im;
+        return *this;
+    }
+
+    double getRe() { return re; }
+    void setRe(double re1) { re = re1; }
+
+    double getIm() { return im; }
+    void setIm(double im1) { im = im1; }
+
+    double getModul() { return sqrt(re * re + im * im); }
+
+    int operator==(CComplex& c1)
+    {
+        return ((re == c1.re) && (im == c1.im));
+    }
+
+    CComplex pow2()
+    {
+        CComplex rez;
+        rez.re = powl(re * 1.0, 2) - powl(im * 1.0, 2);
+        rez.im = 2.0 * re * im;
+        return rez;
+    }
+
+    friend CComplex operator+(const CComplex& c1, const CComplex& c2);
+    friend CComplex operator*(CComplex& c1, CComplex& c2);
+
+    void print(FILE* f)
+    {
+        fprintf(f, "%.20f%+.20f i", re, im);
+    }
+
+private:
+    double re, im;
+};
+
+CComplex operator+(const CComplex& c1, const CComplex& c2)
+{
+    CComplex rez(c1.re + c2.re, c1.im + c2.im);
+    return rez;
+}
+
+CComplex operator*(CComplex& c1, CComplex& c2)
+{
+    CComplex rez(c1.re * c2.re - c1.im * c2.im,
+        c1.re * c2.im + c1.im * c2.re);
+    return rez;
+}
+
+class CJuliaFatou {
+public:
+    CJuliaFatou()
+    {
+        // m.c is initialized by default with 0+0i
+
+        m.nriter = NRITER_JF;
+        m.modmax = MODMAX_JF;
+    }
+
+    CJuliaFatou(CComplex& c)
+    {
+        m.c = c;
+        m.nriter = NRITER_JF;
+        m.modmax = MODMAX_JF;
+    }
+
+    ~CJuliaFatou() {}
+
+    void setmodmax(double v) { assert(v <= MODMAX_JF); m.modmax = v; }
+    double getmodmax() { return m.modmax; }
+
+    void setnriter(int v) { assert(v <= NRITER_JF); m.nriter = v; }
+    int getnriter() { return m.nriter; }
+
+    // it tests if x belongs to the Julia-Fatou set Jc
+    // it returns 0 if yes, -1 for finite convergence, +1 for infinite convergence
+    int isIn(CComplex& x)
+    {
+        int rez = 0;
+        // an array for storing the values for computing z_n+1 = z_n * z_n + c
+        CComplex z0, z1;
+
+        z0 = x;
+        for (int i = 1; i < m.nriter; i++)
+        {
+            z1 = z0 * z0 + m.c;
+            if (z1 == z0)
+            {
+                // x does not belong to the J-F set because the 
+                // iterative process converges finitely
+                rez = -1;
+                break;
+            }
+            else if (z1.getModul() > m.modmax)
+            {
+                // x does not belong to the J-F set because the 
+                // iterative process converges infinitely
+                rez = 1;
+                break;
+            }
+            z0 = z1;
+        }
+
+        return rez;
+    }
+
+    // it displays a J-F set
+    void display(double xmin, double ymin, double xmax, double ymax)
+    {
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_POINTS);
+        for (double x = xmin; x <= xmax; x += RX_JF)
+            for (double y = ymin; y <= ymax; y += RY_JF)
+            {
+                CComplex z(x, y);
+                int r = isIn(z);
+                if (r == 0)
+                {
+                    glVertex3d(x, y, 0);
+                }
+                else if (r == -1)
+                {
+                }
+                else if (r == 1)
+                {
+                }
+            }
+        fprintf(stdout, "STOP\n");
+        glEnd();
+
+        glPopMatrix();
+    }
+
+private:
+    struct SDate {
+        CComplex c;
+        // number of iterations
+        int nriter;
+        // the maximum value of M
+        double modmax;
+    } m;
+};
+
+
+class Mandelbrot {
+public:
+    Mandelbrot()
+    {
+        // m.c is initialized by default with 0+0i
+
+        m.nriter = NRITER_JF;
+        m.modmax = MODMAX_JF;
+    }
+
+    Mandelbrot(CComplex& c)
+    {
+        m.c = c;
+        m.nriter = NRITER_JF;
+        m.modmax = MODMAX_JF;
+    }
+
+    ~Mandelbrot() {}
+
+    void setmodmax(double v) { assert(v <= MODMAX_JF); m.modmax = v; }
+    double getmodmax() { return m.modmax; }
+
+    void setnriter(int v) { assert(v <= NRITER_JF); m.nriter = v; }
+    int getnriter() { return m.nriter; }
+
+    // it tests if x belongs to the Mb set Jc
+    // it returns 0 if yes, -1 for finite convergence, +1 for infinite convergence
+    int isIn(CComplex& x)
+    {
+        int rez = 0;
+        // an array for storing the values for computing z_n+1 = z_n * z_n + c
+        CComplex z0, z1;
+
+        z0.setIm(0);
+        z0.setRe(0);
+        for (int i = 1; i < m.nriter; i++)
+        {
+            z1 = z0 * z0 + x;
+
+            if (z1.getModul() > 2)
+            {
+                // x does not belong to the Mb set because the 
+                // iterative process converges infinitely
+                rez = i;
+                break;
+            }
+            z0 = z1;
+        }
+
+        return rez;
+    }
+
+    // it displays a Mb set
+    void display(double xmin, double ymin, double xmax, double ymax)
+    {
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_POINTS);
+        for (double x = xmin; x <= xmax; x += RX_JF)
+            for (double y = ymin; y <= ymax; y += RY_JF)
+            {
+                CComplex z(x, y);
+                double r = isIn(z);
+                if (r == 0)
+                {
+                    glColor3f(1, 0, 0);
+                    glVertex3d(x / 2, y / 2, 0);
+                }
+                else if (r >0)
+                {
+                    glColor3f(0, r / 10,1- r / 10);
+                    glVertex3d(x / 2, y / 2, 0);
+                    
+                }
+            }
+        fprintf(stdout, "STOP\n");
+        glEnd();
+
+        glPopMatrix();
+    }
+
+private:
+    struct SDate {
+        CComplex c;
+        // number of iterations
+        int nriter;
+        // the maximum value of M
+        double modmax;
+    } m;
+};
 
 class C2coord
 {
@@ -50,11 +312,14 @@ public:
   }
 
 
+
 protected:
   struct SDate
   {
     double x,y;
   } m;
+
+
 };
 
 class CPunct : public C2coord
@@ -102,6 +367,8 @@ public:
   {
     fprintf(fis, "(%+f,%+f)", m.x, m.y);
   }
+
+
 
 };
 
@@ -202,22 +469,103 @@ public:
     }
   }
 
+  void segmentSquare(double lungime, int nivel, CPunct& p, CVector v)
+  {
+      CPunct p1;
+      if (nivel == 0)
+      {
+          drawSquare(lungime, p, v);
+      }
+      else
+      {
+          double cx, cy;
+          p.getxy(cx, cy);
+          CPunct ajutator(cx, cy);
+          segmentSquare(lungime / 2.0, 0, ajutator, v);
+
+          //the three at the top
+          ajutator.setY(cy + lungime);
+          ajutator.setX(cx + lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+          ajutator.setX(cx);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+          ajutator.setX(cx - lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+
+          //the two in the middle
+          ajutator.setY(cy);
+          ajutator.setX(cx + lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+          ajutator.setX(cx - lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+
+          //the three at the bottom
+          ajutator.setY(cy - lungime);
+          ajutator.setX(cx + lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+          ajutator.setX(cx);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+          ajutator.setX(cx - lungime);
+          segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
+
+      }
+  }
+
   void afisare(double lungime, int nivel)
   {
-    CVector v1(sqrt(3.0)/2.0, 0.5);
-    CPunct p1(-1.0, 0.0);
 
-    CVector v2(0.0, -1.0);
-    CPunct p2(0.5, sqrt(3.0)/2.0);
+      if (global_x < 150) {
+          CVector v1(sqrt(3.0) / 2.0, 0.5);
+          CPunct p1(-1.0, 0.0);
 
-    CVector v3(-sqrt(3.0)/2.0, 0.5);
-    CPunct p3(0.5, -sqrt(3.0)/2.0);
+          CVector v2(0.0, -1.0);
+          CPunct p2(0.5, sqrt(3.0) / 2.0);
 
-    segmentKoch(lungime, nivel, p1, v1);
-    segmentKoch(lungime, nivel, p2, v2);
-    segmentKoch(lungime, nivel, p3, v3);
+          CVector v3(-sqrt(3.0) / 2.0, 0.5);
+          CPunct p3(0.5, -sqrt(3.0) / 2.0);
+
+          segmentKoch(lungime, nivel, p1, v1);
+          segmentKoch(lungime, nivel, p2, v2);
+          segmentKoch(lungime, nivel, p3, v3);
+
+      }
+
+      else if (global_x > 150) {
+          CVector v1(0.5, 0.0);
+          CPunct p1(0, 0);
+
+
+
+          segmentSquare(lungime, nivel, p1, v1);
+
+          segmentSquare(lungime * 3, 0, p1, v1);
+      }
   }
-};
+
+
+
+  private:
+      void drawSquare(double lungime, CPunct & p, CVector v) {
+          double ics, yigrec;
+          p.getxy(ics, yigrec);
+          CPunct helper(ics - lungime / 2.0, yigrec - lungime / 2.0);
+
+          v.deseneaza(helper, lungime);
+          helper = v.getDest(helper, lungime);
+          v.rotatie(90);
+          v.deseneaza(helper, lungime);
+          helper = v.getDest(helper, lungime);
+          v.rotatie(90);
+          v.deseneaza(helper, lungime);
+          helper = v.getDest(helper, lungime);
+          v.rotatie(90);
+          v.deseneaza(helper, lungime);
+          helper = v.getDest(helper, lungime);
+          v.rotatie(90);
+
+      }
+
+ };
 
 class CArboreBinar
 {
@@ -361,14 +709,14 @@ public:
     CPunct used;
 
     //maybe not such a good approach
-    if (global_x < 100) {
+    if (global_x < 150) {
         used = p;
         v.deseneaza(used, 0.25);
         used = v.getDest(used, 0.25);
         arborePerron(lungime, nivel, 0.4, used, v);
     }
         
-    else if (global_x > 200) {
+    else if (global_x > 150) {
         v.rotatie(180);
         used = pminus;
         v.deseneaza(used, 0.25);
@@ -418,93 +766,49 @@ public:
     }
   }
 
+
+  void image3(double lungime, int nivel, CPunct& p, CVector& v , int d)
+  {
+      if (nivel == 0)
+      {
+
+
+          v.deseneaza(p, lungime);
+          p = v.getDest(p, lungime);
+          
+      }
+      else
+      {
+
+          image3(lungime , nivel - 1, p, v, d);
+          v.rotatie(-d*60);
+          image3(lungime , nivel - 1, p, v, -d);
+          v.rotatie(-d * 60);
+          image3(lungime, nivel - 1, p, v, d);
+         //v.rotatie(d * 60);
+      }
+  }
+
   void afisare(double lungime, int nivel)
   {
-    CVector v(0.0, 1.0);
-    CPunct p(0.0, 0.0);
-    printf("x=%d y=%d\n", global_x, global_y);
+      if (global_x < 150) {
+          CVector v(0.0, 1.0);
+          CPunct p(0.0, 0.0);
+          printf("x=%d y=%d\n", global_x, global_y);
 
-    curbaHilbert(lungime, nivel, p, v, 1);
+          curbaHilbert(lungime, nivel, p, v, 1);
+      }
+      else {
+          CVector v(0.0, -1.0);
+          CPunct p(0.0, 0.0);
+          printf("x=%d y=%d\n", global_x, global_y);
+
+          image3(lungime, nivel, p, v, 1);
+      }
+
   }
 };
 
-class SQUARES
-{
-public:
-    void segmentSquare(double lungime, int nivel, CPunct& p, CVector v)
-    {
-        CPunct p1;
-        if (nivel == 0)
-        {
-            drawSquare(lungime, p, v);
-        }
-        else
-        {
-            double cx, cy;
-            p.getxy(cx, cy);
-            CPunct ajutator(cx, cy);
-            segmentSquare(lungime / 2.0, 1, ajutator, v);
-
-            //the three at the top
-            ajutator.setY(cy + lungime);
-            ajutator.setX(cx + lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            ajutator.setX(cx);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            ajutator.setX(cx - lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-
-            //the two in the middle
-            ajutator.setY(cy);
-            ajutator.setX(cx + lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            ajutator.setX(cx - lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-
-            //the three at the bottom
-            ajutator.setY(cy - lungime);
-            ajutator.setX(cx + lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            ajutator.setX(cx);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            ajutator.setX(cx - lungime);
-            segmentSquare(lungime / 4.0, nivel - 1, ajutator, v);
-            
-        }
-    }
-
-    void afisare(double lungime, int nivel)
-    {
-        CVector v1(0.5, 0.0);
-        CPunct p1(0,0);
-
-
-
-        segmentSquare(lungime, nivel, p1, v1);
-
-        segmentSquare(lungime * 2, 0, p1, v1);
-    }
-
-private:
-    void drawSquare(double lungime, CPunct& p, CVector v) {
-        double ics, yigrec;
-        p.getxy(ics, yigrec);
-        CPunct helper(ics - lungime / 2.0, yigrec - lungime / 2.0);
-
-        v.deseneaza(helper, lungime);
-        helper = v.getDest(helper, lungime);
-        v.rotatie(90);
-        v.deseneaza(helper, lungime);
-        helper = v.getDest(helper, lungime);
-        v.rotatie(90);
-        v.deseneaza(helper, lungime);
-        helper = v.getDest(helper, lungime);
-        v.rotatie(90);
-        v.deseneaza(helper, lungime);
-        helper = v.getDest(helper, lungime);
-        v.rotatie(90);
-    }
-};
 
 
 
@@ -513,7 +817,12 @@ private:
 // displays the Koch snowflake
 void Display1() {
   CCurbaKoch cck;
-  cck.afisare(sqrt(3.0), nivel);
+  if (global_x < 150) {
+      cck.afisare(sqrt(3.0), nivel);
+  }
+  else {
+      cck.afisare(0.5, nivel);
+  }
 
   char c[3];
   sprintf(c, "%2d", nivel);
@@ -655,32 +964,34 @@ void Display4() {
   nivel++;
 }
 
+// Julia-Fatou set for z0 = 0 and c = -0.12375+0.056805i
 void Display5() {
-    SQUARES cck;
-    cck.afisare(0.5, nivel);
+    CComplex c(-0.12375, 0.056805);
+    CJuliaFatou cjf(c);
 
-    char c[3];
-    sprintf(c, "%2d", nivel);
-    glRasterPos2d(-0.98, -0.98);
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'N');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'i');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'v');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'e');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'l');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, '=');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c[0]);
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c[1]);
+    glColor3f(1.0, 0.1, 0.1);
+    cjf.setnriter(30);
+    cjf.display(-0.8, -0.4, 0.8, 0.4);
+}
 
-    glRasterPos2d(-1.0, 0.9);
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 's');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'q');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'u');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'a');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'r');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 'e');
-    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, 's');
+// Julia-Fatou set for z0 = 0 and c = -0.012+0.74i
+void Display6() {
+    CComplex c(-0.012, 0.74);
+    CJuliaFatou cjf(c);
 
-    nivel++;
+    glColor3f(1.0, 0.1, 0.1);
+    cjf.setnriter(30);
+    cjf.display(-1, -1, 1, 1);
+}
+
+void Display7() {
+    CComplex c(-0.012, 0.74);
+    Mandelbrot cmb(c);
+
+    glColor3f(1.0, 0.1, 0.1);
+    //changed nr of iteration: now it looks just like in the SS, 30 iter = too high precision
+    cmb.setnriter(10);
+    cmb.display(-2, -2, 2, 2);
 }
 
 void Init(void) {
@@ -722,6 +1033,14 @@ void Display(void)
     case '5':
         glClear(GL_COLOR_BUFFER_BIT);
         Display5();
+        break;
+    case '6':
+        glClear(GL_COLOR_BUFFER_BIT);
+        Display6();
+        break;
+    case '7':
+        glClear(GL_COLOR_BUFFER_BIT);
+        Display7();
         break;
     default:
       break;
