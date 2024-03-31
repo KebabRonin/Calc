@@ -5,16 +5,29 @@ EPS = 1e-10
 
 norma = lambda x: np.linalg.norm(x, ord=math.inf)
 
-#vector(vector_rar)
+#vector_rar(vector_rar)
 class MatRara:
 	def __init__(self, n):
 		self.n = n
-		self.m = [[] for _ in range(n)]
+		self.m = dict()
 
 	def add_elem(self, val, lin, col):
 		if val == 0:
 			return
+		if lin not in self.m:
+			self.m[lin] = []
 		line = self.m[lin]
+		# for idx, l in enumerate(self.m):
+		# 	if l[1] == lin:
+		# 		line = l[0]
+		# 		break
+		# 	elif l[1] > lin and (idd == len(self.m) or l[1] < self.m[idd][1]):
+		# 		idd = idx
+		# else:
+		# 	# didnt break
+		# 	self.m.insert(idd, [[], lin])
+		# 	line = self.m[idd][0]
+
 		idd = len(line)
 		for idx, i in enumerate(line):
 			if i[1] == col:
@@ -29,8 +42,12 @@ class MatRara:
 
 	def __str__(self):
 		s = "-*-\n"
-		for l in self.m[:5] + ["..."] +  self.m[-5:]:
-			s += l.__str__() + '\n'
+		keis = sorted(list(self.m.keys()))
+		for l in keis[:5]:
+			s += self.m[l].__str__() + '\n'
+		s += '...\n'
+		for l in keis[-5:]:
+			s += self.m[l].__str__() + '\n'
 		s += "-*-"
 		return s
 
@@ -38,16 +55,27 @@ class MatRara:
 		print("Using custom eq")
 		if a.n != self.n:
 			return False
-		for i in range(self.n):
-			if len(a.m[i]) != len(self.m[i]):
-				print("Equality: line lenghts not equal")
-				print(len(a.m[i]), len(self.m[i]))
-				print(a.m[i])
-				print(self.m[i])
+		if len(a.m) != len(self.m):
+			print("Equality: nr non-zero lines not equal")
+			return False
+		for aa in a.m:
+			if aa not in self.m:
+				print(aa, 1)
 				return False
-			for aa, bb in zip(a.m[i], self.m[i]):
-				if not (aa[0] == bb[0] and aa[1] == bb[1]):
-					return False
+			else:
+				for aaa, bbb in zip(a.m[aa], self.m[aa]):
+					if not (aaa[0] == bbb[0] and aaa[1] == bbb[1]):
+						print(aa, 2, aaa, bbb)
+						return False
+		for bb in self.m:
+			if bb not in a.m:
+				print(bb, 1)
+				return False
+			else:
+				for aaa, bbb in zip(a.m[bb], self.m[bb]):
+					if not (aaa[0] == bbb[0] and aaa[1] == bbb[1]):
+						print(bb, 1, aaa, bbb)
+						return False
 		return True
 
 def is_zero(x: float) -> bool:
@@ -81,23 +109,25 @@ def bonus_sum(a, b):
 		return
 
 	c = MatRara(a.n)
-	for id, l in enumerate(a.m):
-		for co in l:
-			c.add_elem(co[0], id, co[1])
-	for id, l in enumerate(b.m):
-		for co in l:
-			c.add_elem(co[0], id, co[1])
+
+	for l in a.m:
+		for co in a.m[l]:
+			c.add_elem(co[0], l, co[1])
+	for l in b.m:
+		for co in b.m[l]:
+			c.add_elem(co[0], l, co[1])
 	return c
 
 def get_diag(a):
 	diag = np.zeros((a.n,))
-	for idx, l in enumerate(a.m):
-		for c in l:
-			if c[1] == idx:
-				diag[idx] = c[0]
-				break
+	for l in range(a.n):
+		if l in a.m:
+			for c in a.m[l]:
+				if c[1] == l:
+					diag[l] = c[0]
+					break
 		else:
-			diag[idx] = 0
+			diag[l] = 0
 	return diag
 
 def diag_nul(a):
@@ -116,10 +146,14 @@ def gauss_streidel(a, b):
 	while not is_zero(dx) and k <= kmax and dx <= 1e8:
 		dx = 0
 		for i in range(a.n):
-			column = [(l[0] * xc[l[1]]) for l in a.m[i] if l[1] != i]
+			if i not in a.m:
+				column = 0
+			else:
+				column = [(l[0] * xc[l[1]]) for l in a.m[i] if l[1] != i]
 			temp = (b[i] - sum(column)) / diag[i]
 			dx = max(dx, xc[i] - temp)
 			xc[i] = temp
+		# print(xc)
 		k += 1
 	if is_zero(dx):
 		return xc, k
@@ -137,8 +171,8 @@ for i in range(6):
 		x, steps = rez
 		print(i, x, steps, "pasi")
 		verif = np.zeros_like(b)
-		for i in range(a.n):
-			verif[i] = sum([l[0] * x[l[1]] for l in a.m[i]])
+		for l in a.m:
+			verif[l] = sum([(c[0] * x[c[1]]) for c in a.m[l]])
 		print("norma:", norma(verif - b))
 
 # bonus:
