@@ -26,7 +26,7 @@
     <Library Include="glut32.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="t3p3.cpp">
+    <ClCompile Include="t3 GlodeanuCosminAdrian BrassatAlexandru.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

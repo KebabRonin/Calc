@@ -148,7 +148,7 @@
     <Library Include="glut32.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="t3p3.cpp" />
+    <ClCompile Include="t3 GlodeanuCosminAdrian BrassatAlexandru.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
