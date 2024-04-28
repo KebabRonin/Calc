@@ -1,0 +1,19 @@
+﻿  t5p1.cpp
+t5p1.obj : error LNK2019: unresolved external symbol __imp___glutInitWithExit referenced in function glutInit_ATEXIT_HACK
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutInitDisplayMode referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutInitWindowPosition referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutInitWindowSize referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutMainLoop referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp___glutCreateWindowWithExit referenced in function glutCreateWindow_ATEXIT_HACK
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutPostRedisplay referenced in function "void __cdecl KeyboardFunc(unsigned char,int,int)" (?KeyboardFunc@@YAXEHH@Z)
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutSwapBuffers referenced in function "void __cdecl Display(void)" (?Display@@YAXXZ)
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutDisplayFunc referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutReshapeFunc referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutKeyboardFunc referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutMouseFunc referenced in function main
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutWireSphere referenced in function "void __cdecl Display3(void)" (?Display3@@YAXXZ)
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutSolidSphere referenced in function "void __cdecl Display4(void)" (?Display4@@YAXXZ)
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutWireCube referenced in function "void __cdecl Display1(void)" (?Display1@@YAXXZ)
+t5p1.obj : error LNK2019: unresolved external symbol __imp_glutSolidCube referenced in function "void __cdecl Display2(void)" (?Display2@@YAXXZ)
+glut32.lib : warning LNK4272: library machine type 'x86' conflicts with target machine type 'x64'
+C:\Users\KebabWarrior\Desktop\Facultate\Calc\grafica\tema5parca\x64\Debug\tema5parca.exe : fatal error LNK1120: 16 unresolved externals
