@@ -28,18 +28,18 @@ Also uses examples from https://stackoverflow.com/questions/45131804/how-to-set-
 //The version number needs to be the absolute first line.^^^^^^^
 
 //The vertex shader is called once per vertex.
-	
+
 /*precision controls the precision of the computations done by the GPU,
 	and also their speed.
 */
 precision mediump float;
-//M_PI is not defined in GLSL.	
+//M_PI is not defined in GLSL.
 #define M_PI 3.1415926535897932384626433832795
 /*An uniform(constant across all vertices) input from which
 	we receive the transformation matrix.
 */
 uniform mat4 u_matrix4;
-//An uniform input from which we receive a clock.	
+//An uniform input from which we receive a clock.
 uniform float u_vertexTime;
 /*A varying(changing across all vertices) input	giving us the position of each vertex.
 	Bound and set below, in the JS script's rendering process.
@@ -50,7 +50,7 @@ in vec4 i_vertColor;
 //Two output variables which will be automatically passed by name in the next shader.
 out vec4 io_fragPosition;
 out vec4 io_fragColor;
-	
+
 void main() {
 	/*Add the homogenous coordinate.
 		i_vertPosition has: .x, .y, .z.
@@ -72,6 +72,7 @@ void main() {
 	/*--->First homework requirement: make the cubes move in a circular trajectory
 		(circle or ellipse) instead of just bouncing up and down.
 	*/
+	pos[0] += 0.5 * cos(u_vertexTime * M_PI); // <--- aici am schimbat
 	/*gl_Position is the output variable where OpenGL looks for final vertex coordinates.
 		Don't declare it as an 'out', it's implicit.
 		n.b.: it is _not_ gl_position, but gl_Position.
@@ -97,15 +98,15 @@ void main() {
 #define M_PI 3.1415926535897932384626433832795
 precision mediump float;
 /*We use the same time as in the vertex shader; however	since this is a different
-	shader, we need to have a different variable.	
+	shader, we need to have a different variable.
  */
 uniform float u_fragmentTime;
-//Here we receive the variables from the vertex shader. It is enough that they are named the same for OpenGL to pass them. However, as there are far more fragments than vertices, OpenGL also interpolates them!	
+//Here we receive the variables from the vertex shader. It is enough that they are named the same for OpenGL to pass them. However, as there are far more fragments than vertices, OpenGL also interpolates them!
 in vec4 io_fragPosition;
 in vec4 io_fragColor;
-//We define a variable which will be asigned as the color for the fragment.	
+//We define a variable which will be asigned as the color for the fragment.
 out vec4 o_fragColor;
-  
+
 void main() {
 	/*We also have the pre-defined gl_FragCoord: vec4, which gives fragment coordinates
 		in window pixels, floating point. Usually from -0.5 to e.g. 1979.5
@@ -118,6 +119,12 @@ void main() {
 	  colour channel, for clarity.
 	*/
 	o_fragColor = rgba;
+	float speed = 10.0;
+	float spread = 0.5;
+	float width = 20.0;
+	o_fragColor.x = spread * abs(sin(gl_FragCoord.x / width + speed * u_fragmentTime));
+	o_fragColor.y = 0.0;
+	o_fragColor.z = 0.0;
 }
 </script>
 
@@ -165,13 +172,13 @@ function main() {
 	//Let's log the locations. None should be -1.
   console.log("positionLocation", positionLocation);
 	console.log("colorLocation", colorLocation);
-	console.log("matrix4Location", matrix4Location);	
+	console.log("matrix4Location", matrix4Location);
 	console.log("vertTimeLocation", lVertexTime);
 	console.log("fragTimeLocation", lFragmentTime);
   //Enable depth testing, to have depth and have closer objects obscure farther objects.
   gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LEQUAL);
-	
+
   //We store the following information about each object:
 	/*Vertex buffer: the 'pointer' to the GPU-side RAM where the geometry information
 		of that object has been uploaded.
@@ -220,7 +227,7 @@ function main() {
   window.requestAnimationFrame(drawScene);
 
 	//That's it for the main() function. Below are function definitions.
-	
+
   function addObject() {
 		/*Add a basic object, without actual vertices.
 			We use this to allocate buffers and pointers.
@@ -263,7 +270,7 @@ function main() {
     va.push(...v[0]); ca.push(...c[0]);
     return [va, ca];
   }
-	
+
   function addCube(sideLength) {
 		//Add a cube, as an object, according to its length.
 		//First, add the object, which allocates memory.
@@ -298,7 +305,7 @@ function main() {
       [0.1, 0.1, 0.1, 1],
       [0.9, 0.1, 0.1, 1],
       [0.9, 0.1, 0.9, 1],
-      [0.1, 0.1, 0.9, 1],		     
+      [0.1, 0.1, 0.9, 1],
     ]);
     va.push(...v);
     ca.push(...c);
@@ -383,7 +390,7 @@ function main() {
     centres[pos * 3 + 1] = l/2;
     centres[pos * 3 + 2] = l/2;
   }
-	
+
   function renderObject(vertexBuffer, colorBuffer, count) {
 		/*Render an object, given the pointer ot the vertex buffer, the color buffer,
 			and the vertex count.
@@ -432,7 +439,7 @@ function main() {
 		//Actually render the object.
     gl.drawArrays(primitiveType, offset, count);
   }
-  
+
   function drawScene(timestamp = 0) {
 		/*Draw the scene. Receive a timestamp from the browser to know
 			how much time has passed, we can advance animations smoothly.
@@ -456,7 +463,7 @@ function main() {
 		var aspectRatioY = 1;
     //Clear the canvas to the default colour (opaque white).
     gl.clear(gl.COLOR_BUFFER_BIT);
- 
+
 		/*The projection matrix is the last to apply, logically.
 			Since matrix multiplication is prepended, we compute it _first_.
 		*/
@@ -473,7 +480,7 @@ function main() {
 				we save the general matrix.
 			 */
 			var pushMatrix = transformationMatrix;
-			//Since we often have 3 components per object, pre-multiply. 
+			//Since we often have 3 components per object, pre-multiply.
 			var pos = ii * 3;
 			//Below are the transformations in logical order.
 			/*Move the object so that the centre of the object is in (0, 0, 0),
@@ -507,7 +514,7 @@ function main() {
     window.requestAnimationFrame(drawScene);
   }
 }
-	
+
 //Call the main function.
 main();
 </script>
