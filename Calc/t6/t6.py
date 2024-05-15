@@ -66,7 +66,10 @@ def Newton_prog(xs, fxs):
 
 def cmm_patrate(xs, fxs):
 	global M
-	return np.linalg.solve()
+	# b = np.stack([xs]+[np.ones(len(xs)) for _ in range(3)]).T
+	ff = fxs
+	# return np.linalg.lstsq(b, ff)[0]
+	return np.polyfit(xs, fxs, deg=M)
 
 
 def Horner(polinom, x):
@@ -75,22 +78,32 @@ def Horner(polinom, x):
 		d = polinom[i] + d * x
 	return d
 
-def plott(xs, fxs, f_aprox, actual_f):
-	plt.plot(xs, [f_aprox(x) for x in xs], linewidth=5, color='orange', label='f_aprox')
+def plott(xs, actual, **kwargs):
+	for idx, k in enumerate(kwargs):
+		plt.plot(xs, [kwargs[k](x) for x in xs], linewidth=5*(len(kwargs)-idx), label=k)
 	plt.plot(xs, [actual_f(x) for x in xs], linewidth=1, color='blue', label='actual')
 	# plt.plot(xs, fxs, linewidth=1, color='blue', label='actual')
+
 	plt.legend()
 	plt.show()
 
 def decl_f(x):
 	return x ** 4 - 12 * (x ** 3) + 30 * (x ** 2) + 12
 
-M = 5
-xs, fxs, actual_f = read_data('t6.json')
+M = 4
+xs, fxs, actual_f = read_data()
 print("xs, fxs:", xs, fxs)
-ll = Newton_prog(xs, fxs)
 x_ = xs[0] + (xs[1] - xs[0])/2
+print("==== NEWTON")
+ll_newt = Newton_prog(xs, fxs)
 # print(ll(x_), actual_f(x_))
+print(f"{ll_newt(x_)=}\n{norma(ll_newt(x_) - actual_f(x_))=}")
 
-print(f"{ll(x_)=}\n{norma(ll(x_) - actual_f(x_))=}")
-plott(xs, fxs, ll, actual_f)
+print("==== CMM PATRATE")
+poly = cmm_patrate(xs, fxs)
+print(poly)
+print(f"{Horner(poly, x_)}\n{norma(Horner(poly, x_) - actual_f(x_))=}")
+print("Sum norme:", sum([norma(Horner(poly, x) - actual_f(x)) for x in xs]))
+ll_cmm = lambda x: Horner(poly, x)
+
+plott(xs, actual=actual_f, newton=ll_newt, patrate=ll_cmm, )
